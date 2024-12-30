@@ -1,0 +1,65 @@
+@model web1.Models.Product
+
+@{
+    ViewData["Title"] = "Delete Product";
+}
+
+<div class="container">
+    <div class="card shadow-sm">
+        <div class="card-header bg-danger text-white">
+            <h4><i class="bi bi-exclamation-triangle"></i> Confirm Delete</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    @if (Model.Images != null && Model.Images.Any())
+                    {
+                        <img src="~/images/products/@Model.Images.First().ImagePath" 
+                             class="img-fluid rounded" 
+                             alt="@Model.Name">
+                    }
+                    else
+                    {
+                        <img src="~/images/default/no-image.png" 
+                             class="img-fluid rounded" 
+                             alt="No Image">
+                    }
+                </div>
+                <div class="col-md-8">
+                    <h5>Are you sure you want to delete this product?</h5>
+                    <hr />
+                    <dl class="row">
+                        <dt class="col-sm-3">Name</dt>
+                        <dd class="col-sm-9">@Model.Name</dd>
+
+                        <dt class="col-sm-3">Category</dt>
+                        <dd class="col-sm-9">@Model.Category?.Name</dd>
+
+                        <dt class="col-sm-3">Price</dt>
+                        <dd class="col-sm-9">$@Model.Price.ToString("N2")</dd>
+
+                        <dt class="col-sm-3">Description</dt>
+                        <dd class="col-sm-9">@Model.Description</dd>
+                    </dl>
+
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-circle"></i>
+                        This action cannot be undone. All associated images and data will be permanently deleted.
+                    </div>
+
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to List
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

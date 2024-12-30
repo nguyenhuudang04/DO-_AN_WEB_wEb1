@@ -1,0 +1,297 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Computer Store</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <header class="main-header">
+        <!-- Top Banner -->
+        <div class="top-banner">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <span>Giao nhanh - Miễn phí cho đơn từ 300K</span>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <span>Sản phẩm chính hãng - Xuất VAT đầy đủ</span>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <span>Tải App - Tích điểm & nhận ưu đãi</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Header -->
+        <div class="header-main">
+            <div class="container">
+                <div class="row align-items-center">
+                    <!-- Logo -->
+                    <div class="col-md-2">
+                        <a class="navbar-brand text-white" asp-controller="Home" asp-action="Index">
+                            <h4 class="mb-0">Computer Store</h4>
+                        </a>
+                    </div>
+
+                    <!-- Search Bar -->
+                    <div class="col-md-5">
+                        <form class="d-flex" asp-controller="Home" asp-action="Index" method="get">
+                            <div class="input-group">
+                                <input type="text" name="searchString" class="form-control" 
+                                       placeholder="Bạn cần tìm gì?" />
+                                <button class="btn btn-light" type="submit">
+                                    <i class="bi bi-search"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Right Menu -->
+                    <div class="col-md-5">
+                        <div class="d-flex justify-content-end align-items-center gap-4">
+                            <a href="tel:098716161" class="text-white text-decoration-none">
+                                <i class="bi bi-telephone"></i>
+                                <span>0987-161600</span>
+                            </a>
+
+                            <a asp-controller="Cart" asp-action="Index" class="text-white text-decoration-none position-relative">
+                                <i class="bi bi-cart3"></i>
+                                <span>Giỏ hàng</span>
+                                @await Component.InvokeAsync("CartItemCount")
+                            </a>
+
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <div class="dropdown">
+                                    <button class="btn btn-link text-white text-decoration-none dropdown-toggle" 
+                                            type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-person-circle"></i>
+                                        <span>@(User.IsInRole("Admin") ? "Admin" : "Tài khoản")</span>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        @if (User.IsInRole("Admin"))
+                                        {
+                                            <li>
+                                                <a class="dropdown-item" asp-controller="Product" asp-action="Index">
+                                                    <i class="bi bi-box"></i> Quản lý sản phẩm
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" asp-controller="Category" asp-action="Index">
+                                                    <i class="bi bi-tags"></i> Quản lý danh mục
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" asp-controller="DeliveryTracking" asp-action="Index">
+                                                    <i class="bi bi-truck"></i> Quản lý đơn hàng
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" asp-controller="ReviewManagement" asp-action="Index">
+                                                    <i class="bi bi-star"></i> Quản lý đánh giá
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" asp-controller="Banner" asp-action="Index">
+                                                    <i class="bi bi-images"></i> Banner Management
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                        }
+                                        
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="Account" asp-action="Profile">
+                                                <i class="bi bi-person"></i> Hồ sơ
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" asp-controller="OrderHistory" asp-action="Index">
+                                                <i class="bi bi-clock-history"></i> Lịch sử đơn hàng
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form asp-controller="Account" asp-action="Logout" method="post">
+                                                <button type="submit" class="dropdown-item text-danger">
+                                                    <i class="bi bi-box-arrow-right"></i> Đăng xuất
+                                                </button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                            }
+                            else
+                            {
+                                <a asp-controller="Account" asp-action="Login" 
+                                   class="text-white text-decoration-none">
+                                    <i class="bi bi-person-circle"></i>
+                                    <span>Đăng nhập</span>
+                                </a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Menu -->
+       
+    </header>
+
+    <div class="page-container">
+        <div class="content-wrapper">
+            <!-- Left Menu -->
+            <div class="left-menu">
+                <div class="left-menu-header">
+                    <h5>Danh Mục Sản Phẩm</h5>
+                </div>
+                <div class="left-menu-content">
+                    @await Component.InvokeAsync("CategoryMenu", new { isLeftMenu = true })
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <main role="main">
+                    @RenderBody()
+                </main>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="bg-white pt-5 pb-3">
+            <div class="container">
+                <div class="row">
+                    <!-- Cột 1: Tổng đài hỗ trợ -->
+                    <div class="col-md-3 mb-4">
+                        <h5 class="text-dark mb-3">Tổng đài hỗ trợ miễn phí</h5>
+                        <div class="mb-2">
+                            <p class="mb-1">Gọi mua hàng: <a href="tel:0987161600" class="text-danger fw-bold">0987-161600</a></p>
+                            <small class="text-muted">(7:30 - 22:00)</small>
+                        </div>
+                        <div class="mb-2">
+                            <p class="mb-1">Gọi khiếu nại: <a href="tel:0987161600" class="text-danger fw-bold">0987-161600</a></p>
+                            <small class="text-muted">(8:00 - 21:30)</small>
+                        </div>
+                        <div class="mb-4">
+                            <p class="mb-1">Gọi bảo hành: <a href="tel:0987161600" class="text-danger fw-bold">0987-161600</a></p>
+                            <small class="text-muted">(8:00 - 21:00)</small>
+                        </div>
+
+                        <h5 class="text-dark mb-3">Phương thức thanh toán</h5>
+                        <div class="payment-methods">
+                            <img src="~/images/payment/palpal).png" alt="Paypal" class="payment-icon">
+                
+                        </div>
+                    </div>
+
+                    <!-- Cột 2: Thông tin và chính sách -->
+                    <div class="col-md-3 mb-4">
+                        <h5 class="text-dark mb-3">Thông tin và chính sách</h5>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Mua hàng và thanh toán Online</a></li>
+                            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Mua hàng trả góp Online</a></li>
+                            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Chính sách giao hàng</a></li>
+                            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Tra điểm Smember</a></li>
+                            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Xem ưu đãi Smember</a></li>
+                            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Tra thông tin bảo hành</a></li>
+                            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Tra cứu hoá đơn điện tử</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Cột 3: Dịch vụ và thông tin khác -->
+                    <div class="col-md-3 mb-4">
+                        <h5 class="text-dark mb-3">Dịch vụ và thông tin khác</h5>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Khách hàng doanh nghiệp (B2B)</a></li>
+                            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Ưu đãi thanh toán</a></li>
+                            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Quy chế hoạt động</a></li>
+                            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Chính sách Bảo hành</a></li>
+                            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Liên hệ hợp tác kinh doanh</a></li>
+                            <li class="mb-2"><a href="#" class="text-muted text-decoration-none">Tuyển dụng</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Cột 4: Kết nối với Computer Store -->
+                    <div class="col-md-3 mb-4">
+                        <h5 class="text-dark mb-3">Kết nối với Computer Store</h5>
+                        <div class="social-links mb-4">
+                            <a href="https://youtu.be/hVdNrkQogmQ?si=pfz97sgP8Bb37S2_" class="me-3 text-dark"><i class="bi bi-youtube fs-4"></i></a>
+                            <a href="https://www.facebook.com/profile.php?id=100090082448040" class="me-3 text-dark"><i class="bi bi-facebook fs-4"></i></a>
+                            <a href="https://www.instagram.com/thinkpro.vn/" class="me-3 text-dark"><i class="bi bi-instagram fs-4"></i></a>
+                            <a href="https://tiktok.com/search?q=c%E1%BB%A7a%20h%C3%A0ng%20b%C3%A1n%20m%C3%A1y%20t%C3%ADnh%20&t=1735442231585" class="me-3 text-dark"><i class="bi bi-tiktok fs-4"></i></a>
+                        </div>
+
+                        <h5 class="text-dark mb-3">Website thành viên</h5>
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <a href="#" class="text-muted text-decoration-none">Hệ thống bảo hành sửa chữa Computer Store</a>
+                            </li>
+                            <li class="mb-2">
+                                <a href="https://www.facebook.com/nguyen.huu.ang.499446/" class="text-muted text-decoration-none">Nguyễn Hữu Đang</a>
+                            </li>
+                            <li class="mb-2">
+                                <a href="https://www.facebook.com/thai.le.185586" class="text-muted text-decoration-none">Lê Hoàng Thái</a>
+                            </li>
+                            <li class="mb-2">
+                                <a href="https://www.facebook.com/nguyen.duong.170236" class="text-muted text-decoration-none">Nguyễn Cảnh Dương</a>
+                            </li>
+                            <li class="mb-2">
+                                <a href="https://www.facebook.com/Tfuu14" class="text-muted text-decoration-none">Nguyễn Trần Phú</a>
+                            </li>
+
+                        </ul>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Copyright -->
+                <div class="row">
+                    <div class="col-12">
+                        <p class="text-muted small">
+                            © 2024 - Computer Store - Công ty TNHH Thương Mại và Dịch Vụ Computer Store<br>
+                            Địa chỉ: 123 Đường ABC, Phường XYZ, Quận 1, TP. Hồ Chí Minh<br>
+                            Điện thoại: 0987-161600 | Email: support@computerstore.com
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Menu Toggle Button -->
+    <button class="menu-toggle d-lg-none">
+        <i class="bi bi-list"></i>
+    </button>
+
+    <!-- Overlay -->
+    <div class="menu-overlay"></div>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <!--Start of Tawk.to Script-->
+    <script type="text/javascript">
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    (function(){
+        var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+        s1.async=true;
+        s1.src='https://embed.tawk.to/676d65d649e2fd8dfefe4874/1ig1lbkd4';
+        s1.charset='UTF-8';
+        s1.setAttribute('crossorigin','*');
+        s0.parentNode.insertBefore(s1,s0);
+    })();
+    </script>
+    <!--End of Tawk.to Script-->
+</body>
+</html>

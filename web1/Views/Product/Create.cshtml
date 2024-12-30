@@ -1,0 +1,98 @@
+@model web1.Models.Product
+
+@{
+    ViewData["Title"] = "Create Product";
+}
+
+<div class="container">
+    <h1>Create Product</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <form asp-action="Create" enctype="multipart/form-data">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                
+                <div class="form-group mb-3">
+                    <label asp-for="CategoryId" class="control-label">Category</label>
+                    <select asp-for="CategoryId" class="form-control" 
+                            asp-items="@(new SelectList(ViewBag.Categories, "Id", "Name"))">
+                        <option value="">-- Select Category --</option>
+                    </select>
+                    <span asp-validation-for="CategoryId" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Name" class="control-label"></label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Price" class="control-label"></label>
+                    <input asp-for="Price" class="form-control" />
+                    <span asp-validation-for="Price" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Description" class="control-label"></label>
+                    <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="control-label">Product Images</label>
+                    <div class="custom-file">
+                        <input type="file" name="images" multiple accept="image/*" 
+                               class="form-control" id="imageInput" required />
+                        <div class="invalid-feedback">Please select at least one image.</div>
+                    </div>
+                    <div id="imagePreview" class="mt-2 d-flex flex-wrap gap-2">
+                    </div>
+                    <small class="text-muted">You can select multiple images at once.</small>
+                </div>
+
+                <div class="form-group mt-3">
+                    <button type="submit" class="btn btn-primary">Create</button>
+                    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Preview images before upload
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            var preview = document.getElementById('imagePreview');
+            preview.innerHTML = '';
+            
+            for(let i = 0; i < e.target.files.length; i++) {
+                let file = e.target.files[i];
+                if (!file.type.startsWith('image/')){ continue; }
+                
+                let div = document.createElement('div');
+                div.className = 'preview-image';
+                
+                let img = document.createElement('img');
+                img.file = file;
+                img.className = 'img-thumbnail';
+                img.style.width = '100px';
+                img.style.height = '100px';
+                img.style.objectFit = 'cover';
+                
+                div.appendChild(img);
+                preview.appendChild(div);
+                
+                let reader = new FileReader();
+                reader.onload = (function(aImg) { 
+                    return function(e) { 
+                        aImg.src = e.target.result; 
+                    }; 
+                })(img);
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+} 

@@ -1,0 +1,27 @@
+@model IEnumerable<Category>
+@{
+    var isLeftMenu = ViewBag.IsLeftMenu as bool? ?? false;
+}
+
+@if (isLeftMenu)
+{
+    @foreach (var category in Model)
+    {
+        <a href="/Home/Index?categoryId=@category.Id" class="left-menu-item">
+            <i class="bi bi-folder"></i>
+            <span>@category.Name</span>
+            <small>(@category.Products?.Count ?? 0)</small>
+        </a>
+    }
+}
+else
+{
+    @foreach (var category in Model)
+    {
+        <li class="nav-item">
+            <a class="nav-link" href="/Home/Index?categoryId=@category.Id">
+                @category.Name
+            </a>
+        </li>
+    }
+} 

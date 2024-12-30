@@ -1,0 +1,48 @@
+﻿@model IEnumerable<web1.Models.Category>
+
+@{
+    ViewData["Title"] = "Danh mục";
+}
+
+<div class="container">
+    <h1>Danh mục</h1>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    <p>
+        <a asp-action="Create" class="btn btn-primary mb-3">Tạo danh mục mới</a>
+    </p>
+
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">@item.Name</h5>
+                        <p class="card-text">@item.Description</p>
+                        <p class="card-text">
+                            <small class="text-muted">
+                                Số sản phẩm trong danh mục: @(item.Products?.Count ?? 0)
+                            </small>
+                        </p>
+                        <div class="btn-group">
+                            <a asp-controller="Product" asp-action="Index"
+                               asp-route-categoryId="@item.Id"
+                               class="btn btn-primary">Xem sản phẩm</a>
+                            <a asp-action="Edit" asp-route-id="@item.Id"
+                               class="btn btn-secondary">Chỉnh sửa</a>
+                            <a asp-action="Delete" asp-route-id="@item.Id"
+                               class="btn btn-danger">Xóa</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

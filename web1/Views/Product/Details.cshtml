@@ -1,0 +1,329 @@
+@model web1.Models.Product
+
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+<div class="container">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Product" asp-action="Index">Products</a></li>
+            <li class="breadcrumb-item active">@Model.Name</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Product Images -->
+        <div class="col-md-6">
+            <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    @if (Model.Images != null && Model.Images.Count > 0)
+                    {
+                        var first = true;
+                        foreach (var image in Model.Images)
+                        {
+                            <div class="carousel-item @(first ? "active" : "")">
+                                <img src="~/images/products/@image.ImagePath" 
+                                     class="d-block w-100" 
+                                     alt="@Model.Name"
+                                     asp-append-version="true">
+                            </div>
+                            first = false;
+                        }
+                    }
+                    else
+                    {
+                        <div class="carousel-item active">
+                            <img src="~/images/no-image.png" 
+                                 class="d-block w-100" 
+                                 alt="No Image Available"
+                                 asp-append-version="true">
+                        </div>
+                    }
+                </div>
+                @if (Model.Images != null && Model.Images.Count > 1)
+                {
+                    <button class="carousel-control-prev" type="button" 
+                            data-bs-target="#productCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" 
+                            data-bs-target="#productCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                }
+            </div>
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-md-6">
+            <h1 class="mb-3">@Model.Name</h1>
+            <p class="price-tag mb-4">$@Model.Price.ToString("N2")</p>
+
+            <div class="mb-4">
+                <h5>Mô tả</h5>
+                <p>
+                    @Html.Raw(string.Join("<br />",
+                             Model.Description
+                             .Split(' ')
+                             .Select((word, index) => new { word, index })
+                             .GroupBy(x => x.index / 10)
+                             .Select(g => string.Join(" ", g.Select(x => x.word)))
+                             ))
+                </p>
+            </div>
+            <div class="mb-4">
+                <h5>Category</h5>
+                <p>@Model.Category?.Name</p>
+            </div>
+
+            <form asp-controller="Cart" asp-action="AddToCart" method="post" class="mb-4">
+                <input type="hidden" name="productId" value="@Model.Id" />
+                <div class="input-group">
+                    <input type="number" name="quantity" value="1" min="1" 
+                           class="form-control" style="max-width: 100px" />
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-cart-plus"></i> Add to Cart
+                    </button>
+                </div>
+            </form>
+
+            @if (User.IsInRole("Admin"))
+            {
+                <div class="btn-group">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" 
+                       class="btn btn-outline-primary">
+                        <i class="bi bi-pencil"></i> Edit
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@Model.Id" 
+                       class="btn btn-outline-danger">
+                        <i class="bi bi-trash"></i> Delete
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    @if (ViewBag.RelatedProducts != null && ((List<web1.Models.Product>)ViewBag.RelatedProducts).Count > 0)
+    {
+        <div class="related-products mt-5">
+            <h3 class="mb-4">Sản phẩm liên quan</h3>
+            <div class="row">
+                @foreach (var relatedProduct in (List<web1.Models.Product>)ViewBag.RelatedProducts)
+                {
+                    <div class="col-md-3 mb-4">
+                        <div class="card h-100">
+                            <a asp-action="Details" asp-route-id="@relatedProduct.Id" 
+                               class="text-decoration-none">
+                                @if (relatedProduct.Images != null && relatedProduct.Images.Count > 0)
+                                {
+                                    <img src="~/images/products/@relatedProduct.Images.First().ImagePath" 
+                                         class="card-img-top" 
+                                         alt="@relatedProduct.Name"
+                                         asp-append-version="true">
+                                }
+                                else
+                                {
+                                    <img src="~/images/no-image.png" 
+                                         class="card-img-top" 
+                                         alt="No Image Available"
+                                         asp-append-version="true">
+                                }
+                                <div class="card-body">
+                                    <h5 class="card-title text-dark">@relatedProduct.Name</h5>
+                                    <p class="card-text price-tag">$@relatedProduct.Price.ToString("N2")</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Thêm phần hiển thị đánh giá -->
+    <div class="reviews-section mt-5">
+        <h3>Đánh giá sản phẩm</h3>
+        
+        <!-- Hiển thị số sao trung bình -->
+        <div class="overall-rating mb-4">
+            <h4>Đánh giá trung bình</h4>
+            <div class="stars">
+                @{
+                    var avgRating = Model.GetAverageRating();
+                    var totalReviews = Model.GetTotalReviews();
+                }
+                @for (int i = 1; i <= 5; i++)
+                {
+                    if (i <= avgRating)
+                    {
+                        <i class="bi bi-star-fill text-warning"></i>
+                    }
+                    else if (i - avgRating <= 0.5)
+                    {
+                        <i class="bi bi-star-half text-warning"></i>
+                    }
+                    else
+                    {
+                        <i class="bi bi-star text-warning"></i>
+                    }
+                }
+                <span class="ms-2">
+                    @if (totalReviews > 0)
+                    {
+                        <span>(@avgRating.ToString("0.0")) từ @totalReviews đánh giá</span>
+                    }
+                    else
+                    {
+                        <span>Chưa có đánh giá</span>
+                    }
+                </span>
+            </div>
+        </div>
+
+        <!-- Danh sách đánh giá -->
+        @if (ViewBag.ApprovedReviews != null && ViewBag.ApprovedReviews.Count > 0)
+        {
+            <div class="reviews-list">
+                @foreach (var review in ViewBag.ApprovedReviews)
+                {
+                    <div class="review-item card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="user-info">
+                                    <h5 class="mb-0">@review.User.UserName</h5>
+                                    <small class="text-muted">@review.CreatedAt.ToString("dd/MM/yyyy")</small>
+                                </div>
+                                <div class="rating">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= review.Rating)
+                                        {
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-star text-warning"></i>
+                                        }
+                                    }
+                                </div>
+                            </div>
+                            <p class="review-content mb-0">@review.Comment</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info">
+                Chưa có đánh giá nào cho sản phẩm này.
+            </div>
+        }
+
+        <!-- Form đánh giá (chỉ hiển thị nếu user đã đăng nhập) -->
+        @if (User.Identity.IsAuthenticated)
+        {
+            <div class="review-form mt-4">
+                <h4>Viết đánh giá của bạn</h4>
+                <form asp-controller="Review" asp-action="Create" method="post">
+                    <input type="hidden" name="ProductId" value="@Model.Id" />
+                    
+                    <div class="form-group mb-3">
+                        <label>Đánh giá của bạn:</label>
+                        <div class="rating-input">
+                            @for (int i = 5; i >= 1; i--)
+                            {
+                                <input type="radio" id="star@(i)" name="Rating" value="@i" />
+                                <label for="star@(i)"><i class="bi bi-star-fill"></i></label>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="comment">Nhận xét:</label>
+                        <textarea name="Comment" id="comment" class="form-control" rows="3" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Gửi đánh giá</button>
+                </form>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-warning mt-4">
+                Vui lòng <a asp-controller="Account" asp-action="Login">đăng nhập</a> để viết đánh giá.
+            </div>
+        }
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .carousel-item img {
+            max-height: 400px;
+            object-fit: contain;
+        }
+
+        .price-tag {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #0056b3;
+        }
+
+        .carousel-control-prev,
+        .carousel-control-next {
+            background-color: rgba(0,0,0,0.3);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .breadcrumb {
+            background: #f8f9fa;
+            padding: 0.75rem 1rem;
+            border-radius: 0.25rem;
+        }
+
+        .stars {
+            font-size: 1.25rem;
+        }
+        
+        .review-item {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+        }
+
+        .rating-input {
+            display: flex;
+            flex-direction: row-reverse;
+            gap: 0.5rem;
+        }
+
+        .rating-input input {
+            display: none;
+        }
+
+        .rating-input label {
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: #ddd;
+        }
+
+        .rating-input label:hover,
+        .rating-input label:hover ~ label,
+        .rating-input input:checked ~ label {
+            color: #ffc107;
+        }
+
+        .review-content {
+            white-space: pre-line;
+        }
+    </style>
+} 

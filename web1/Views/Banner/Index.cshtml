@@ -1,0 +1,150 @@
+@model IEnumerable<web1.Models.Banner>
+
+@{
+    ViewData["Title"] = "Banner Management";
+}
+
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Banner Management</h1>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Add New Banner
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover" id="bannerTable">
+            <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Image</th>
+                    <th>Title</th>
+                    <th>Link</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.OrderBy(b => b.DisplayOrder))
+                {
+                    <tr data-id="@item.Id">
+                        <td>
+                            <input type="number" class="form-control form-control-sm order-input" 
+                                   value="@item.DisplayOrder" style="width: 70px"
+                                   min="1" onchange="updateOrder(@item.Id, this.value)">
+                        </td>
+                        <td>
+                            <img src="~/images/banners/@item.ImagePath" 
+                                 class="img-thumbnail" style="height: 100px;" 
+                                 data-bs-toggle="modal" 
+                                 data-bs-target="#editModal-@item.Id"
+                                 role="button"/>
+                        </td>
+                        <td>@item.Title</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(item.Link))
+                            {
+                                <a href="@item.Link" target="_blank">@item.Link</a>
+                            }
+                        </td>
+                        <td>
+                            <form asp-action="ToggleActive" method="post" style="display: inline;">
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <button type="submit" class="btn btn-sm @(item.IsActive ? "btn-success" : "btn-secondary")">
+                                    @(item.IsActive ? "Active" : "Inactive")
+                                </button>
+                            </form>
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-primary btn-sm"
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#editModal-@item.Id">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <form asp-action="Delete" method="post" style="display: inline;">
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <button type="submit" class="btn btn-danger btn-sm" 
+                                            onclick="return confirm('Are you sure you want to delete this banner?');">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Edit Modal -->
+                    <div class="modal fade" id="editModal-@item.Id" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <form asp-action="Edit" method="post" enctype="multipart/form-data">
+                                    <input type="hidden" name="id" value="@item.Id" />
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Edit Banner</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">Current Image</label>
+                                            <img src="~/images/banners/@item.ImagePath" 
+                                                 class="img-fluid rounded" alt="Banner Image"/>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">New Image (optional)</label>
+                                            <input type="file" name="newImage" class="form-control" accept="image/*" />
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Title</label>
+                                            <input type="text" name="title" class="form-control" 
+                                                   value="@item.Title" />
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Description</label>
+                                            <textarea name="description" class="form-control" 
+                                                      rows="3">@item.Description</textarea>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Link</label>
+                                            <input type="text" name="link" class="form-control" 
+                                                   value="@item.Link" />
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" 
+                                                data-bs-dismiss="modal">Close</button>
+                                        <button type="submit" class="btn btn-primary">Save changes</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function updateOrder(id, newOrder) {
+            fetch('/Banner/UpdateOrder', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id: id, newOrder: newOrder })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Optional: Reload page or show success message
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating order');
+            });
+        }
+    </script>
+} 

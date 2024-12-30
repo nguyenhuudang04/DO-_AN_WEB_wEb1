@@ -1,0 +1,405 @@
+﻿@model PaginatedList<web1.Models.Product>
+@using web1.Helpers
+
+@{
+    ViewData["Title"] = "Home Page";
+    var maxProductPrice = Model.Any() ? Model.Max(p => p.Price) : 1000;
+    var minProductPrice = Model.Any() ? Model.Min(p => p.Price) : 0;
+}
+
+<div class="banner-container">
+    <div id="mainBanner" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
+        <div class="carousel-inner">
+            @{
+                var banners = (List<Banner>)ViewBag.Banners;
+                
+                for (int i = 0; i < banners.Count; i++)
+                {
+                    var banner = banners[i];
+                    <div class="carousel-item @(i == 0 ? "active" : "")">
+                        @if (!string.IsNullOrEmpty(banner.Link))
+                        {
+                            <a href="@banner.Link">
+                                <img src="~/images/banners/@banner.ImagePath" 
+                                     class="d-block w-100" alt="@banner.Title">
+                            </a>
+                        }
+                        else
+                        {
+                            <img src="~/images/banners/@banner.ImagePath" 
+                                 class="d-block w-100" alt="@banner.Title">
+                        }
+                        @if (!string.IsNullOrEmpty(banner.Title))
+                        {
+                            <div class="carousel-caption d-none d-md-block">
+                                <h5>@banner.Title</h5>
+                                <p>@banner.Description</p>
+                            </div>
+                        }
+                    </div>
+                }
+            }
+        </div>
+        @if (banners.Count > 1)
+        {
+            <button class="carousel-control-prev" type="button" 
+                    data-bs-target="#mainBanner" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" 
+                    data-bs-target="#mainBanner" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Next</span>
+            </button>
+        }
+    </div>
+</div>
+
+<div class="container">
+    <!-- Search and Filter Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <form asp-action="Index" method="get" class="mb-4">
+                <div class="row g-3">
+                    <!-- Category Filter -->
+                    <div class="col-md-3">
+                        <select name="categoryId" class="form-control" 
+                                asp-items="@(new SelectList(ViewBag.Categories, "Id", "Name", ViewBag.SelectedCategoryId))">
+                            <option value="">All Categories</option>
+                        </select>
+                    </div>
+
+                    <!-- Search by Name -->
+                    <div class="col-md-3">
+                        <input type="text" name="searchString" class="form-control" 
+                               placeholder="Search by name..." value="@ViewBag.CurrentFilter">
+                    </div>
+
+                    <!-- Price Range Slider -->
+                    <div class="col-md-4">
+                        <div class="price-slider-container">
+                            <label>Price Range: <span id="priceRange">$0 - $@maxProductPrice</span></label>
+                            <div class="range-slider">
+                                <input type="range" id="minPriceSlider" class="range-slider__range" 
+                                       min="0" max="@maxProductPrice" step="1" 
+                                       value="@(ViewBag.MinPrice ?? 0)">
+                                <input type="range" id="maxPriceSlider" class="range-slider__range" 
+                                       min="0" max="@maxProductPrice" step="1" 
+                                       value="@(ViewBag.MaxPrice ?? maxProductPrice)">
+                            </div>
+                            <input type="hidden" name="minPrice" id="minPrice" value="@(ViewBag.MinPrice ?? 0)">
+                            <input type="hidden" name="maxPrice" id="maxPrice" value="@(ViewBag.MaxPrice ?? maxProductPrice)">
+                        </div>
+                    </div>
+
+                    <!-- Search Button -->
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card product-card h-100">
+                    <!-- Thêm div overlay để chứa nút View Detail -->
+                    <div class="product-overlay">
+                        <a asp-controller="Product" asp-action="Details" asp-route-id="@item.Id" 
+                           class="btn btn-light btn-view-details">
+                            <i class="bi bi-eye"></i> Xem chi tiết
+                        </a>
+                    </div>
+
+                    <div class="product-content">
+                        @if (item.Images != null && item.Images.Count > 0)
+                        {
+                            <div class="product-image">
+                                <img src="~/images/products/@item.Images.First().ImagePath" 
+                                     class="card-img-top" 
+                                     alt="@item.Name"
+                                     asp-append-version="true">
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="product-image">
+                                <img src="~/images/no-image.png" 
+                                     class="card-img-top" 
+                                     alt="No Image Available"
+                                     asp-append-version="true">
+                            </div>
+                        }
+                        <div class="card-body">
+                            <h5 class="card-title">@item.Name</h5>
+                            <p class="price-tag">$@item.Price.ToString("N2")</p>
+                            <div class="product-rating">
+                                @{
+                                    var avgRating = item.GetAverageRating();
+                                    var totalReviews = item.GetTotalReviews();
+                                }
+                                <div class="stars">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        if (i <= avgRating)
+                                        {
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                        }
+                                        else if (i - avgRating <= 0.5)
+                                        {
+                                            <i class="bi bi-star-half text-warning"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-star text-warning"></i>
+                                        }
+                                    }
+                                    <span class="rating-text">
+                                        @if (totalReviews > 0)
+                                        {
+                                            <span>(@avgRating.ToString("0.0")) - @totalReviews đánh giá</span>
+                                        }
+                                        else
+                                        {
+                                            <span>Chưa có đánh giá</span>
+                                        }
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Footer chỉ còn nút Add to Cart -->
+                    <div class="card-footer bg-transparent border-top-0">
+                        <form asp-controller="Cart" asp-action="AddToCart" method="post">
+                            <input type="hidden" name="productId" value="@item.Id" />
+                            <div class="input-group">
+                                <input type="number" name="quantity" value="1" min="1" 
+                                       class="form-control" style="max-width: 70px" />
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-cart-plus"></i> Thêm vào giỏ
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Thêm phần phân trang ở cuối danh sách sản phẩm -->
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    @if (Model.HasPreviousPage)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action("Index", new { 
+                                page = Model.PageIndex - 1,
+                                searchString = ViewBag.CurrentFilter,
+                                categoryId = ViewBag.SelectedCategoryId,
+                                minPrice = ViewBag.MinPrice,
+                                maxPrice = ViewBag.MaxPrice
+                            })" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="page-item disabled">
+                            <span class="page-link">&laquo;</span>
+                        </li>
+                    }
+
+                    @for (int i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <li class="page-item @(i == Model.PageIndex ? "active" : "")">
+                            <a class="page-link" href="@Url.Action("Index", new { 
+                                page = i,
+                                searchString = ViewBag.CurrentFilter,
+                                categoryId = ViewBag.SelectedCategoryId,
+                                minPrice = ViewBag.MinPrice,
+                                maxPrice = ViewBag.MaxPrice
+                            })">@i</a>
+                        </li>
+                    }
+
+                    @if (Model.HasNextPage)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action("Index", new { 
+                                page = Model.PageIndex + 1,
+                                searchString = ViewBag.CurrentFilter,
+                                categoryId = ViewBag.SelectedCategoryId,
+                                minPrice = ViewBag.MinPrice,
+                                maxPrice = ViewBag.MaxPrice
+                            })" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="page-item disabled">
+                            <span class="page-link">&raquo;</span>
+                        </li>
+                    }
+                </ul>
+            </nav>
+
+            <div class="text-center text-muted mt-2">
+                <small>Hiển thị @((Model.PageIndex - 1) * 10 + 1) đến @(Math.Min(Model.PageIndex * 10, Model.TotalItems)) 
+                       trong tổng số @Model.TotalItems sản phẩm</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .product-card {
+            transition: transform 0.2s;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .product-content {
+            cursor: pointer;
+        }
+
+        .product-image {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: #f8f9fa;
+        }
+
+        .product-image img {
+            max-height: 100%;
+            width: auto;
+            object-fit: contain;
+            transition: transform 0.3s;
+        }
+
+        .product-card:hover .product-image img {
+            transform: scale(1.05);
+        }
+
+        .btn-view-details {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .price-tag {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #0056b3;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-footer {
+            background: transparent;
+            border-top: none;
+            padding-top: 15px;
+        }
+
+        .input-group {
+            margin-top: 10px;
+        }
+
+        /* Price Range Slider Styles */
+        .price-slider-container {
+            padding: 10px;
+        }
+
+        .range-slider {
+            position: relative;
+            height: 30px;
+            margin: 10px 0;
+        }
+
+        .range-slider__range {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 5px;
+            border-radius: 5px;
+            background: #d7dcdf;
+            outline: none;
+            position: absolute;
+        }
+
+        .range-slider__range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #0d6efd;
+            cursor: pointer;
+            position: relative;
+            z-index: 1;
+        }
+
+        #maxPriceSlider {
+            background: none;
+        }
+
+        #priceRange {
+            font-weight: bold;
+            color: #0d6efd;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const minSlider = document.getElementById('minPriceSlider');
+            const maxSlider = document.getElementById('maxPriceSlider');
+            const minPriceInput = document.getElementById('minPrice');
+            const maxPriceInput = document.getElementById('maxPrice');
+            const priceRangeDisplay = document.getElementById('priceRange');
+
+            function formatPrice(price) {
+                return parseFloat(price).toFixed(2);
+            }
+
+            function updatePriceRange() {
+                const minVal = parseFloat(minSlider.value);
+                const maxVal = parseFloat(maxSlider.value);
+
+                if (minVal > maxVal) {
+                    if (this === minSlider) {
+                        maxSlider.value = minVal;
+                    } else {
+                        minSlider.value = maxVal;
+                    }
+                }
+
+                minPriceInput.value = formatPrice(minSlider.value);
+                maxPriceInput.value = formatPrice(maxSlider.value);
+                priceRangeDisplay.textContent = `$${formatPrice(minSlider.value)} - $${formatPrice(maxSlider.value)}`;
+            }
+
+            minSlider.addEventListener('input', updatePriceRange);
+            maxSlider.addEventListener('input', updatePriceRange);
+
+            // Initialize display
+            updatePriceRange();
+        });
+    </script>
+}

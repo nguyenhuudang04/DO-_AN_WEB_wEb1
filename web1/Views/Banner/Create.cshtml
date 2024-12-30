@@ -1,0 +1,83 @@
+@model web1.Models.Banner
+
+@{
+    ViewData["Title"] = "Create Banner";
+}
+
+<div class="container">
+    <h1>Create Banner</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
+                <div asp-validation-summary="All" class="text-danger"></div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Title" class="control-label"></label>
+                    <input asp-for="Title" class="form-control" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Description" class="control-label"></label>
+                    <textarea asp-for="Description" class="form-control"></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Link" class="control-label"></label>
+                    <input asp-for="Link" class="form-control" />
+                    <span asp-validation-for="Link" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="DisplayOrder" class="control-label"></label>
+                    <input asp-for="DisplayOrder" class="form-control" type="number" min="0" />
+                    <span asp-validation-for="DisplayOrder" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label class="control-label">Banner Image</label>
+                    <input type="file" id="imageInput" name="image" class="form-control" accept="image/*" />
+                    <span class="text-danger field-validation-valid" data-valmsg-for="image" data-valmsg-replace="true"></span>
+                    <small class="text-muted">Allowed formats: .jpg, .jpeg, .png, .gif (max 100MB)</small>
+                </div>
+
+                <div class="form-group mb-3">
+                    <div class="form-check">
+                        <input asp-for="IsActive" class="form-check-input" checked />
+                        <label asp-for="IsActive" class="form-check-label"></label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Create</button>
+                    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function() {
+            $('form').on('submit', function(e) {
+                var fileInput = $('#imageInput')[0];
+                if (fileInput.files.length === 0) {
+                    e.preventDefault();
+                    $('.field-validation-valid[data-valmsg-for="image"]')
+                        .text('Please select an image file')
+                        .show();
+                    return false;
+                }
+                return true;
+            });
+
+            $('#imageInput').on('change', function() {
+                $('.field-validation-valid[data-valmsg-for="image"]').text('');
+            });
+        });
+    </script>
+} 

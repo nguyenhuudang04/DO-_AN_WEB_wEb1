@@ -1,0 +1,118 @@
+@model IEnumerable<web1.Models.Order>
+
+@{
+    ViewData["Title"] = "Order History";
+}
+
+<div class="container">
+    <h1 class="mb-4">Order History</h1>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            You haven't placed any orders yet.
+            <a asp-controller="Home" asp-action="Index" class="alert-link">Start shopping</a>
+        </div>
+    }
+    else
+    {
+        @foreach (var order in Model)
+        {
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <div class="row align-items-center">
+                        <div class="col-md-4">
+                            <strong>Order #@order.Id</strong>
+                        </div>
+                        <div class="col-md-4 text-md-center">
+                            <span class="text-muted">@order.OrderDate.ToString("MMM dd, yyyy HH:mm")</span>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <span class="badge bg-success">Total: $@order.TotalAmount.ToString("N2")</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        @foreach (var item in order.OrderDetails)
+                        {
+                            <div class="col-md-6 mb-3">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0" style="width: 100px;">
+                                        @if (item.Product.Images != null && item.Product.Images.Any())
+                                        {
+                                            <img src="~/images/@item.Product.Images.First().ImagePath" 
+                                                 class="img-thumbnail" alt="@item.Product.Name"
+                                                 style="width: 100px; height: 100px; object-fit: cover;">
+                                        }
+                                        else
+                                        {
+                                            <img src="~/images/no-image.jpg" class="img-thumbnail" 
+                                                 alt="No Image"
+                                                 style="width: 100px; height: 100px; object-fit: cover;">
+                                        }
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="mb-1">
+                                            <a asp-controller="Product" asp-action="Details" 
+                                               asp-route-id="@item.ProductId"
+                                               class="text-decoration-none">@item.Product.Name</a>
+                                        </h6>
+                                        <p class="mb-1">
+                                            <small class="text-muted">
+                                                Quantity: @item.Quantity x $@item.Price.ToString("N2")
+                                            </small>
+                                        </p>
+                                        <p class="mb-0">
+                                            <strong>Subtotal: $@((item.Quantity * item.Price).ToString("N2"))</strong>
+                                        </p>
+                                        <div class="mt-2">
+                                            <a asp-controller="Product" asp-action="Details" 
+                                               asp-route-id="@item.ProductId"
+                                               class="btn btn-outline-primary btn-sm">
+                                                Buy Again
+                                            </a>
+                                            @if (item.Product.Reviews == null || 
+                                                !item.Product.Reviews.Any(r => r.OrderId == order.Id))
+                                            {
+                                                <a asp-controller="Review" asp-action="Create" 
+                                                   asp-route-productId="@item.ProductId" 
+                                                   asp-route-orderId="@order.Id"
+                                                   class="btn btn-outline-secondary btn-sm">
+                                                    Write Review
+                                                </a>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <form asp-action="Reorder" method="post" class="d-inline">
+                        <input type="hidden" name="orderId" value="@order.Id" />
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-cart-plus"></i> Reorder All Items
+                        </button>
+                    </form>
+                    <a asp-controller="OrderTracking" asp-action="Track" asp-route-id="@order.Id" 
+                       class="btn btn-info">
+                        <i class="bi bi-truck"></i> Track Order
+                    </a>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+@section Styles {
+    <style>
+        .card {
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+    </style>
+} 

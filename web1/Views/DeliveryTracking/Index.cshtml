@@ -1,0 +1,190 @@
+﻿@model List<web1.ViewModels.OrderGroupViewModel>
+
+@{
+    ViewData["Title"] = "Order Management";
+}
+
+<div class="container-fluid">
+    <!-- Dashboard Summary -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5>Total Orders</h5>
+                    <h3>@ViewBag.TotalOrders</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5>Pending Orders</h5>
+                    <h3>@ViewBag.PendingOrders</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5>Delivered Orders</h5>
+                    <h3>@ViewBag.DeliveredOrders</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5>Total Amount</h5>
+                    <h3>$@ViewBag.TotalAmount.ToString("N2")</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Groups -->
+    <div class="row">
+        @foreach (var group in Model)
+        {
+            <div class="col-md-6 mb-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <span class="badge @GetStatusBadgeClass(group.Status)">@group.Status</span>
+                            <small class="text-muted">(@group.Count orders)</small>
+                        </h5>
+                        <span>Total: $@group.TotalAmount.ToString("N2")</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Order #</th>
+                                        <th>Customer</th>
+                                        <th>Date</th>
+                                        <th>Amount</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var order in group.Orders)
+                                    {
+                                        <tr id="order-@order.Id">
+                                            <td>#@order.Id</td>
+                                            <td>@order.FullName</td>
+                                            <td>@order.OrderDate.ToString("MMM dd, HH:mm")</td>
+                                            <td>$@order.TotalAmount.ToString("N2")</td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle"
+                                                            data-bs-toggle="dropdown">
+                                                        Update Status
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li>
+                                                            <a class="dropdown-item status-update" href="#"
+                                                               data-order-id="@order.Id" data-status="Pending">
+                                                                <i class="bi bi-hourglass text-warning"></i> Pending
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item status-update" href="#"
+                                                               data-order-id="@order.Id" data-status="Processing">
+                                                                <i class="bi bi-gear text-info"></i> Processing
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item status-update" href="#"
+                                                               data-order-id="@order.Id" data-status="Warehouse">
+                                                                <i class="bi bi-box text-primary"></i> In Warehouse
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item status-update" href="#"
+                                                               data-order-id="@order.Id" data-status="Transit">
+                                                                <i class="bi bi-truck text-secondary"></i> In Transit
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item status-update" href="#"
+                                                               data-order-id="@order.Id" data-status="LocalHub">
+                                                                <i class="bi bi-building text-dark"></i> At Local Hub
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item status-update" href="#"
+                                                               data-order-id="@order.Id" data-status="OutForDelivery">
+                                                                <i class="bi bi-bicycle text-primary"></i> Out for Delivery
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a class="dropdown-item status-update" href="#"
+                                                               data-order-id="@order.Id" data-status="Delivered">
+                                                                <i class="bi bi-check-circle text-success"></i> Delivered
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                    <a asp-controller="OrderTracking" asp-action="Track" 
+                                                       asp-route-id="@order.Id"
+                                                       class="btn btn-sm btn-info">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('.status-update').click(function(e) {
+                e.preventDefault();
+                var link = $(this);
+                var orderId = link.data('order-id');
+                var status = link.data('status');
+
+                $.post('/DeliveryTracking/UpdateStatus', {
+                    orderId: orderId,
+                    status: status
+                })
+                .done(function(response) {
+                    if (response.success) {
+                        // Reload page to show updated status
+                        location.reload();
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                })
+                .fail(function() {
+                    alert('Error updating status');
+                });
+            });
+        });
+    </script>
+}
+
+@functions {
+    string GetStatusBadgeClass(string status)
+    {
+        return status.ToLower() switch
+        {
+            "pending" => "bg-warning",
+            "processing" => "bg-info",
+            "warehouse" => "bg-primary",
+            "transit" => "bg-secondary",
+            "localhub" => "bg-dark",
+            "outfordelivery" => "bg-primary",
+            "delivered" => "bg-success",
+            _ => "bg-secondary"
+        };
+    }
+} 
